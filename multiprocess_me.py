@@ -4,10 +4,8 @@ from bs4 import BeautifulSoup
 import requests
 import queue
 import urllib.request
-import re
 
 q = Queue()
-num_threads = 4
 finished_domains = []
 
 def start_process():
@@ -15,7 +13,7 @@ def start_process():
         get_url()
         url = q.get()
         if url in finished_domains:
-            menu()
+            q.get()
         if url not in finished_domains: 
             finished_domains.append(url)
             print("Scraping " + url)
@@ -23,7 +21,7 @@ def start_process():
             scrape_html(html)
         if q.empty() == True:
             menu()
-
+            
 def get_url():
     with open("domain_names.txt", "r") as dm:
         for url in dm:
@@ -67,11 +65,9 @@ def menu():
             print("3")
         elif choose == "2":
             print("Starting processing queue with added domain names\n")
-            for i in range(num_threads):
-                mp = multiprocessing.Process(target = start_process())
-                menu = multiprocessing.Process(target = menu())
-                menu.start()
-                mp.start()
+            # for i in range(num_threads):
+            mp = multiprocessing.Process(target = start_process())
+            mp.start()
 
         elif choose == "1":
             with open("domain_names.txt", "a") as dm:   
@@ -79,7 +75,6 @@ def menu():
                 print("You've added " + domain_name + ".")
                 dm.write(domain_name + "\n")
                 dm.close()
-                start_process()
                 menu()
         else:
             print("Invalid option. Exiting...")
