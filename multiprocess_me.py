@@ -70,33 +70,41 @@ def scrape_html(html):
                 done_q.put(url)
         logs.close()
         
-def menu():
-    
+def menu():    
     choose = "0"
     while choose == "0":
         print("\nChoose an option\n")
         print("1. Add a domain name")
-        print("2. Start processing queue")
-        print("3. Stop processing queue")
-        print("4. Display Logs")
-        print("5. Exit")
-        
+        print("2. View added domain names")
+        print("3. Start processing queue")
+        print("4. Stop processing queue")
+        print("5. Display Logs")
+        print("6. Exit")        
         choose = input("\nChoose 1-5: ")
-
-        if choose == "5":
+        if choose == "6":
             print("Exiting...")
             exit()
+        elif choose == "5":
+            print("\nOpening Logs...\n")
+            with open("Logs.txt", "r")as logs:
+                for lines in logs:
+                    print(lines.split())
         elif choose == "4":
-            print("4")
-        elif choose == "3":
             print("3")
-        elif choose == "2":
+        elif choose == "3":
             print("\nStarting processing queue with added domain names\n")
             for i in range(num_threads):
                 mp = Process(target = scrapper())
-                menu_p = Process(target = menu())
-                menu_p.start()
                 mp.start()
+        elif choose == "2":
+            if os.path.isfile("domain_names.txt"):
+                print("\nAdded Domain Names\n")
+                with open("domain_names.txt", "r") as names:
+                    for lines in names:
+                        print(lines.split())
+            else:
+                print("\nNo domain names added\n")
+                menu()
         elif choose == "1":
             with open("domain_names.txt", "a") as dm:   
                 domain_name = input("\nDomain name: ")
