@@ -81,21 +81,26 @@ def menu():
         print("5. Display Logs")
         print("6. Exit")        
         choose = input("\nChoose 1-5: ")
+
         if choose == "6":
             print("Exiting...")
             exit()
+
         elif choose == "5":
             print("\nOpening Logs...\n")
             with open("Logs.txt", "r")as logs:
                 for lines in logs:
                     print(lines.split())
+
         elif choose == "4":
             print("3")
+
         elif choose == "3":
             print("\nStarting processing queue with added domain names\n")
             for i in range(num_threads):
                 mp = Process(target = scrapper())
                 mp.start()
+
         elif choose == "2":
             if os.path.isfile("domain_names.txt"):
                 print("\nAdded Domain Names\n")
@@ -105,6 +110,7 @@ def menu():
             else:
                 print("\nNo domain names added\n")
                 menu()
+                
         elif choose == "1":
             with open("domain_names.txt", "a") as dm:   
                 domain_name = input("\nDomain name: ")
