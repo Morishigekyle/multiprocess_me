@@ -5,11 +5,15 @@ import requests
 import queue
 import urllib.request
 import os
+import re
 
+num_threads = 4
 q = Queue()
+done_q = Queue()
 finished_domains = []
+finished_urls = []
 
-def start_process():
+def scrapper():
     while True:
         get_url()
         url = q.get()
@@ -18,7 +22,10 @@ def start_process():
         if url not in finished_domains: 
             finished_domains.append(url)
             print("Scraping " + url)
+            done_q.put(url)
             html = get_html(url)
+            if html is None:
+                continue
             scrape_html(html)
         if q.empty() == True:
             menu()
@@ -34,19 +41,34 @@ def get_url():
         menu()
         
 def get_html(url):
-    html = urllib.request.urlopen(url)
-    return (html)
+    try:
+        html = urllib.request.urlopen(url)
+        return (html)
+    except urllib.error.URLError as e:
+        return None
 
 def scrape_html(html):
     all_urls = [] 
-    bs = BeautifulSoup(html, features="lxml")   
-    with open("Logs.txt", "a") as logs:          
+    the_anchors = []
+    bs = BeautifulSoup(html, features="lxml") 
+    html.geturl()
+    with open("Logs.txt", "a+") as logs:          
         for links in bs.findAll("a"):
-            all_urls.append(str(links.get("href")) + "\n")
-        for urls in all_urls:
-            logs.write(urls)          
+            all_urls.append(str(links.get("href")))
+        for anchor in all_urls:
+            reg = re.match("^/", anchor)
+            if reg:
+                rem_slash = anchor[1:]
+                the_anchors.append(rem_slash)
+        for url in the_anchors:
+            if url in finished_urls:
+                continue
+            else:
+                finished_urls.append(url)
+                logs.write(html.geturl() + url + "\n")
+                q.put(html.geturl() + url)
+                done_q.put(url)
         logs.close()
-    
         
 def menu():
     
@@ -70,15 +92,19 @@ def menu():
             print("3")
         elif choose == "2":
             print("\nStarting processing queue with added domain names\n")
-            # for i in range(num_threads):
-            start_process()
-
-
+            for i in range(num_threads):
+                mp = Process(target = scrapper())
+                menu_p = Process(target = menu())
+                menu_p.start()
+                mp.start()
         elif choose == "1":
             with open("domain_names.txt", "a") as dm:   
                 domain_name = input("\nDomain name: ")
-                print("You've added " + domain_name + ".")
-                dm.write(domain_name + "\n")
+                print("\nYou've added " + domain_name + ".")
+                if domain_name.endswith("/"):
+                    dm.write(domain_name + "\n")
+                else:
+                    dm.write(domain_name + "/\n")
                 dm.close()
                 menu()
         else:
@@ -86,6 +112,4 @@ def menu():
             exit()
         
 if __name__ == "__main__":   
-    mp = multiprocessing.Process(target = start_process())
-    mp.start()
-    mp.join()
+    menu()
