@@ -63,11 +63,13 @@ def scrape_html(html):
         for url in the_anchors:
             if url in finished_urls:
                 continue
+            if url.count(".com") == 1:
+                continue
             else:
                 finished_urls.append(url)
                 logs.write(html.geturl() + url + "\n")
                 q.put(html.geturl() + url)
-                done_q.put(url)
+                done_q.put(html.geturl() + url)
         logs.close()
         
 def menu():    
